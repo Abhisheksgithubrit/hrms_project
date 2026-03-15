@@ -1,0 +1,189 @@
+{% extends "employees/base.html" %}
+
+{% block title %}Reports · HRMS{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    .metric {
+        border-radius: 12px;
+        border: 1px solid var(--card-border);
+        background: var(--bg-1);
+        padding: 14px 16px;
+    }
+    .metric .label {
+        color: var(--muted);
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+    .metric .value {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--ink);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row align-items-stretch g-4">
+    <div class="col-12 col-lg-8">
+        <div class="glass p-4 h-100">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3">
+                <div>
+                    <h2 class="mb-1">Reports</h2>
+                    <p class="mb-0 text-secondary">
+                        Department-wise employee count with charts, table view, and export options.
+                    </p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'employees:department-report' %}" class="btn btn-ghost btn-sm">
+                        <i class="bi bi-braces me-1"></i> JSON
+                    </a>
+                    <a href="{% url 'employees:report-export-csv' %}" class="btn btn-brand btn-sm" download>
+                        <i class="bi bi-download me-1"></i> Export CSV
+                    </a>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-12 col-md-4">
+                    <div class="metric">
+                        <div class="label"><i class="bi bi-diagram-3 me-1"></i> Departments</div>
+                        <div class="value" id="deptCount">0</div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="metric">
+                        <div class="label"><i class="bi bi-people me-1"></i> Total Employees</div>
+                        <div class="value" id="empCount">0</div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="metric">
+                        <div class="label"><i class="bi bi-award me-1"></i> Largest Dept</div>
+                        <div class="value" style="font-size: 1.05rem;" id="largestDept">—</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-12">
+                    <div class="glass p-3">
+                        <div class="fw-bold mb-2">Department Count (Bar)</div>
+                        <canvas id="barChart" height="120"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-4">
+        <div class="glass p-4 h-100">
+            <div class="fw-bold mb-2">Distribution (Doughnut)</div>
+            <canvas id="doughnutChart" height="230"></canvas>
+
+            <hr class="my-4">
+
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <div class="fw-bold">Table</div>
+                <a href="{% url 'employees:employee-list' %}" class="btn btn-ghost btn-sm">
+                    <i class="bi bi-people me-1"></i> Employees
+                </a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Department</th>
+                            <th class="text-end">Employees</th>
+                        </tr>
+                    </thead>
+                    <tbody id="deptTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const rawData = JSON.parse('{{ data|escapejs }}');
+    const labels = Object.keys(rawData);
+    const values = Object.values(rawData);
+
+    const totalEmployees = values.reduce((a, b) => a + b, 0);
+    const deptCount = labels.length;
+    let largestLabel = '—';
+    let largestValue = 0;
+    labels.forEach((l, i) => {
+        if (values[i] > largestValue) {
+            largestValue = values[i];
+            largestLabel = `${l} (${values[i]})`;
+        }
+    });
+
+    document.getElementById('deptCount').textContent = deptCount;
+    document.getElementById('empCount').textContent = totalEmployees;
+    document.getElementById('largestDept').textContent = largestLabel;
+
+    const palette = [
+        'rgba(13, 148, 136, 0.85)',
+        'rgba(245, 158, 11, 0.85)',
+        'rgba(15, 118, 110, 0.85)',
+        'rgba(217, 119, 6, 0.85)',
+        'rgba(20, 184, 166, 0.85)',
+        'rgba(251, 191, 36, 0.85)'
+    ];
+
+    new Chart(document.getElementById('barChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Employees',
+                data: values,
+                backgroundColor: labels.map((_, i) => palette[i % palette.length]),
+                borderRadius: 10
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { display: false }, ticks: { color: '#64748b' } },
+                y: { beginAtZero: true, ticks: { color: '#64748b' }, grid: { color: 'rgba(13, 148, 136, 0.08)' } }
+            }
+        }
+    });
+
+    new Chart(document.getElementById('doughnutChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: values,
+                backgroundColor: labels.map((_, i) => palette[i % palette.length]),
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { color: '#134e4a' } },
+                tooltip: { enabled: true }
+            },
+            cutout: '62%'
+        }
+    });
+
+    const tbody = document.getElementById('deptTableBody');
+    const rows = labels.map((l, i) => ({ department: l, count: values[i] }))
+        .sort((a, b) => b.count - a.count);
+
+    tbody.innerHTML = rows.map(r => (
+        `<tr><td>${r.department}</td><td class="text-end fw-bold">${r.count}</td></tr>`
+    )).join('');
+</script>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "employees/base.html" %}
+
+{% block title %}Delete Employee · HRMS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-5">
+        <div class="glass p-4 p-md-5">
+            <h2 class="mb-3">Delete Employee</h2>
+            <p class="text-secondary mb-4">
+                Are you sure you want to delete <strong>{{ employee.name }}</strong>?
+                This will also remove all attendance records for this employee. This action cannot be undone.
+            </p>
+            <form method="post" class="d-flex gap-2">
+                {% csrf_token %}
+                <a href="{% url 'employees:employee-detail' employee.pk %}" class="btn btn-ghost">
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-trash me-1"></i> Delete
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

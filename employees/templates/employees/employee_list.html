@@ -1,0 +1,129 @@
+{% extends "employees/base.html" %}
+
+{% block title %}Employees · HRMS{% endblock %}
+
+{% block extra_head %}
+<style>
+    .badge-dept {
+        background: linear-gradient(135deg, var(--brand-2), var(--brand));
+    }
+    .btn-gradient {
+        background: linear-gradient(135deg, var(--brand), var(--brand-2));
+        border: none;
+        color: #fff;
+        font-weight: 600;
+    }
+    .btn-gradient:hover {
+        filter: brightness(0.97);
+        color: #fff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-11">
+        <div class="glass p-3 p-md-4">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3">
+                        <div>
+                            <h2 class="mb-1">Employees</h2>
+                            <p class="mb-0 text-secondary">
+                                Filter by department, designation, or search by name/email.
+                            </p>
+                        </div>
+                        <div class="d-flex flex-column flex-sm-row gap-2 mt-3 mt-md-0">
+                            <a href="{% url 'employees:employee-add-page' %}" class="btn btn-gradient text-white">
+                                Add Employee
+                            </a>
+                            <a href="{% url 'employees:department-chart' %}" class="btn btn-outline-primary">
+                                Department Report
+                            </a>
+                        </div>
+                    </div>
+
+                    <form method="get" class="row g-2 g-md-3 mb-4">
+                        <div class="col-12 col-md-3">
+                            <input
+                                type="text"
+                                name="department"
+                                value="{{ department }}"
+                                class="form-control form-control-sm"
+                                placeholder="Department (e.g. IT)"
+                            >
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <input
+                                type="text"
+                                name="designation"
+                                value="{{ designation }}"
+                                class="form-control form-control-sm"
+                                placeholder="Designation (e.g. Manager)"
+                            >
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <input
+                                type="text"
+                                name="search"
+                                value="{{ search }}"
+                                class="form-control form-control-sm"
+                                placeholder="Search by name or email"
+                            >
+                        </div>
+                        <div class="col-12 col-md-2 d-grid">
+                            <button type="submit" class="btn btn-gradient btn-sm text-white">
+                                Apply Filters
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Email</th>
+                                    <th scope="col">Designation</th>
+                                    <th scope="col">Department</th>
+                                    <th scope="col">Date of Joining</th>
+                                    <th scope="col" class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for employee in employees %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'employees:employee-detail' employee.pk %}" class="text-decoration-none fw-semibold text-dark">
+                                            {{ employee.name }}
+                                        </a>
+                                    </td>
+                                    <td class="small text-secondary">{{ employee.email }}</td>
+                                    <td>{{ employee.designation }}</td>
+                                    <td>
+                                        <span class="badge badge-dept text-white">
+                                            {{ employee.department }}
+                                        </span>
+                                    </td>
+                                    <td>{{ employee.date_of_joining }}</td>
+                                    <td class="text-end">
+                                        <a href="{% url 'employees:employee-detail' employee.pk %}" class="btn btn-sm btn-outline-primary">
+                                            View
+                                        </a>
+                                        <a href="{% url 'employees:employee-delete' employee.pk %}" class="btn btn-sm btn-outline-danger">
+                                            Delete
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-secondary">
+                                        No employees found for the selected filters.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

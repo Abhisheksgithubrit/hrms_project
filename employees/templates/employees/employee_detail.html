@@ -1,0 +1,117 @@
+{% extends "employees/base.html" %}
+
+{% block title %}Employee · HRMS{% endblock %}
+
+{% block extra_head %}
+<style>
+    .badge-dept {
+        background: linear-gradient(135deg, var(--brand-2), var(--brand));
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if messages %}
+<div class="row">
+    <div class="col-12">
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="row g-4">
+    <div class="col-12 col-lg-5">
+        <div class="glass p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h2 class="mb-0">{{ employee.name }}</h2>
+                        <span class="badge badge-dept">
+                            {{ employee.department }}
+                        </span>
+                    </div>
+                    <p class="mb-1 text-secondary">
+                        <strong>Designation:</strong> {{ employee.designation }}
+                    </p>
+                    <p class="mb-1 text-secondary">
+                        <strong>Email:</strong> {{ employee.email }}
+                    </p>
+                    <p class="mb-1 text-secondary">
+                        <strong>Date of Joining:</strong> {{ employee.date_of_joining }}
+                    </p>
+                    <p class="mb-3 text-secondary">
+                        <strong>Address:</strong> {{ employee.address }}
+                    </p>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'employees:employee-list' %}" class="btn btn-outline-primary btn-sm">
+                            Back to Employees
+                        </a>
+                        <a href="{% url 'employees:employee-delete' employee.pk %}" class="btn btn-outline-danger btn-sm">
+                            <i class="bi bi-trash me-1"></i> Delete Employee
+                        </a>
+                    </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-7">
+        <div class="glass p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="mb-0">Attendance Records</h3>
+                    </div>
+
+                    <div class="card border-0 bg-light rounded-3 p-3 mb-4">
+                        <div class="fw-bold mb-2"><i class="bi bi-clock-history me-1"></i> Mark Attendance</div>
+                        <form method="post" class="row g-2 align-items-end">
+                            {% csrf_token %}
+                            <input type="hidden" name="mark_attendance" value="1">
+                            <div class="col-12 col-md-3">
+                                <label class="form-label small mb-0">Date</label>
+                                <input type="date" name="date" class="form-control form-control-sm" value="{{ today }}" required>
+                            </div>
+                            <div class="col-12 col-md-2">
+                                <label class="form-label small mb-0">In Time</label>
+                                <input type="time" name="in_time" class="form-control form-control-sm" required>
+                            </div>
+                            <div class="col-12 col-md-2">
+                                <label class="form-label small mb-0">Out Time</label>
+                                <input type="time" name="out_time" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-12 col-md-2">
+                                <button type="submit" class="btn btn-brand btn-sm w-100">Mark</button>
+                            </div>
+                        </form>
+                        <div class="small text-secondary mt-1">One record per employee per date. Add Out time later if needed.</div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Date</th>
+                                    <th scope="col">In Time</th>
+                                    <th scope="col">Out Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for attendance in attendances %}
+                                <tr>
+                                    <td>{{ attendance.date }}</td>
+                                    <td>{{ attendance.in_time }}</td>
+                                    <td>{{ attendance.out_time|default:"Not checked out" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-4 text-secondary">
+                                        No attendance records.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
